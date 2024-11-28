@@ -20,6 +20,7 @@ Move to server folder and open terminal
 
 ```bash
   npm install 
+  npm i nodemon
   nodemon index.js
 ```
     
