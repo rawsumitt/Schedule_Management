@@ -146,52 +146,11 @@ const Schedule = () => {
     }));
   }, [phase, teachers]);
 
-  //to fetch holidays
-  // useEffect(() => {
-  //   const fetchHolidays = async () => {
-  //     const currentYear = new Date().getFullYear(); // Get the current year dynamically
-  //     const apiKey = "2uWe0PfqI0IUOhYJFmT0fJfLMxvcwRXa"; // Your API key
-  //     const apiUrl = `https://calendarific.com/api/v2/holidays?&api_key=${apiKey}&country=IN&year=${currentYear}`;
   
-  //     try {
-  //       const response = await axios.get(apiUrl);
-  //       const holidays = response.data.response.holidays;
-  
-  //       // Filter only national holidays
-  //       const nationalHolidays = holidays.filter((holiday) =>
-  //         holiday.type.includes("National holiday")
-  //       );
-  
-  //       // Map national holidays to FullCalendar event format (all-day events)
-  //       const holidayEvents = nationalHolidays.map((holiday) => ({
-  //         id: `holiday-${holiday.date.iso}`, // Unique ID for each holiday
-  //         title: `${holiday.name}`,
-  //         start: new Date(`${holiday.date.iso}T02:40:00.000Z`), // Use the `iso` date format
-  //         end: new Date(`${holiday.date.iso}T15:00:00.000Z`), // Use the `iso` date format
-  //         allDay: true, // Mark as all-day event
-  //         backgroundColor: "red", // Different color for national holidays
-  //         borderColor: "red", // Consistent with background
-  //       }));
-  
-  //       // Merge holiday events with schedule events
-  //       console.log(holidayEvents)
-  //       setEvents((prevEvents) => [...prevEvents, ...holidayEvents]);
-  
-  //       // Prevent scheduling on holidays
-  //       setDisabledDates(nationalHolidays.map((holiday) => holiday.date.iso));
-  //     } catch (error) {
-  //       console.error("Error fetching national holidays:", error);
-  //     }
-  //   };
-  
-  //   fetchHolidays();
-  // }, [phase]);
-
-
   useEffect(() => {
     const fetchHolidays = async () => {
       const currentYear = new Date().getFullYear(); // Get the current year dynamically
-      const apiKey = "2uWe0PfqI0IUOhYJFmT0fJfLMxvcwRXa"; // Your API key
+      const apiKey = "ENTER YOUR API KEY"; // Your API key
       const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]; // Array of years to fetch holidays for
   
       try {
