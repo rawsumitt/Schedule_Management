@@ -62,8 +62,69 @@ const getSchedulesByPhase = async (req, res) => {
     }
   };
 
+
+  const deleteSchedulePhase = async (req, res) => {
+    const { id } = req.body; // Assuming `id` is passed in the request body to identify the schedule
+  
+    try {
+      // Validate input
+      if (!id) {
+        return res.status(400).json({ message: "Schedule ID is required for deletion." });
+      }
+  
+      // Find the schedule by ID and delete it
+      const deletedSchedule = await Schedule.findByIdAndDelete(id);
+  
+      if (!deletedSchedule) {
+        return res.status(404).json({ message: "Schedule not found for the given ID." });
+      }
+  
+      res.status(200).json({
+        message: "Schedule deleted successfully.",
+        data: deletedSchedule,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting schedule.", error: error.message });
+    }
+  };
+  
+
+const updateSchedulePhase = async (req, res) => {
+  const { id } = req.body; // Assuming `id` is passed in the request body to identify the schedule
+  const updateData = req.body; // Contains the fields to update
+
+  try {
+    // Validate input
+    if (!id) {
+      return res.status(400).json({ message: "Schedule ID is required for update." });
+    }
+
+    // Find the schedule by ID and update it
+    const updatedSchedule = await Schedule.findByIdAndUpdate(id, updateData, {
+      new: true, // Return the updated document
+      runValidators: true, // Ensure data adheres to schema validation
+    });
+
+    if (!updatedSchedule) {
+      return res.status(404).json({ message: "Schedule not found for the given ID." });
+    }
+
+    console.log(updatedSchedule)
+
+    res.status(200).json({
+      message: "Schedule updated successfully.",
+      data: updatedSchedule,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating schedule.", error: error.message });
+  }
+};
+
+
 module.exports = {
   createSchedulePhase,
-  getSchedulesByPhase
+  getSchedulesByPhase,
+  updateSchedulePhase,
+  deleteSchedulePhase
 };
 

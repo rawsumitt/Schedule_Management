@@ -3,7 +3,7 @@ const router = express.Router();
 const {getTeachersName, addTeacher} = require('../controller/teacherController');
 
 // Route to add a schedule for any phase
-router.get('/fetch', getTeachersName);
+router.post('/fetch', getTeachersName);
 router.post('/add', addTeacher);
 
 
