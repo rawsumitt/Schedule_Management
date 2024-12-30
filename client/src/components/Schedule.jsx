@@ -150,7 +150,7 @@ const Schedule = () => {
   useEffect(() => {
     const fetchHolidays = async () => {
       const currentYear = new Date().getFullYear(); // Get the current year dynamically
-      const apiKey = "ENTER YOUR API KEY"; // Your API key
+      const apiKey = "2uWe0PfqI0IUOhYJFmT0fJfLMxvcwRXa"; // Your API key
       const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]; // Array of years to fetch holidays for
   
       try {
