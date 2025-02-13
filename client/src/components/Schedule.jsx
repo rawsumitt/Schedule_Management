@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import react, { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 
 const phaseSubjects = {
-  phase1: [
+  phase1_batch1: [
     ["Anatomy", "anatomy"],
     ["Physiology", "physiology"],
     ["Biochemistry", "biochemistry"],
@@ -14,7 +15,45 @@ const phaseSubjects = {
     ["Foundation-Course", "foundationcourse"],
     ["ECA", "ecaI"],
   ],
-  phase2: [
+  phase1_batch2: [
+    ["Anatomy", "anatomy"],
+    ["Physiology", "physiology"],
+    ["Biochemistry", "biochemistry"],
+    ["Community-Medicine", "communitymedicine"],
+    ["Foundation-Course", "foundationcourse"],
+    ["ECA", "ecaI"],
+  ],
+  phase1_batch3: [
+    ["Anatomy", "anatomy"],
+    ["Physiology", "physiology"],
+    ["Biochemistry", "biochemistry"],
+    ["Community-Medicine", "communitymedicine"],
+    ["Foundation-Course", "foundationcourse"],
+    ["ECA", "ecaI"],
+  ],
+  phase2_batch1: [
+    ["Community Medicine", "communitymedicine2"],
+    ["Pathology", "pathology"],
+    ["Microbiology", "microbiology"],
+    ["Pharmacology", "pharmacology"],
+    ["Forensic Med & TC", "forensicmedandtc1"],
+    ["Medicine", "medicine1"],
+    ["Surgery", "surgery1"],
+    ["Obs & Gyn", "obsandgyn1"],
+    ["ECA", "eca2"],
+  ],
+  phase2_batch2: [
+    ["Community Medicine", "communitymedicine2"],
+    ["Pathology", "pathology"],
+    ["Microbiology", "microbiology"],
+    ["Pharmacology", "pharmacology"],
+    ["Forensic Med & TC", "forensicmedandtc1"],
+    ["Medicine", "medicine1"],
+    ["Surgery", "surgery1"],
+    ["Obs & Gyn", "obsandgyn1"],
+    ["ECA", "eca2"],
+  ],
+  phase2_batch3: [
     ["Community Medicine", "communitymedicine2"],
     ["Pathology", "pathology"],
     ["Microbiology", "microbiology"],
@@ -66,7 +105,7 @@ const lectureTypes = [
 ];
 
 const Schedule = () => {
-  const [phase, setPhase] = useState("phase1");
+  const [phase, setPhase] = useState("phase1_batch1");
   const [events, setEvents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -75,7 +114,6 @@ const Schedule = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedTab, setSelectedTab] = useState("update"); // "update" or "delete"
   const [disabledDates, setDisabledDates] = useState([]);
-
 
   const [formData, setFormData] = useState({
     subject: phaseSubjects[phase][0][0], // Default to the first subject
@@ -87,14 +125,16 @@ const Schedule = () => {
 
   useEffect(() => {
     if (!selectedDate || !selectedTime || !formData.duration) return;
-  
+
     const fullDateTime = `${selectedDate}T${selectedTime}`;
     const startDate = new Date(fullDateTime);
-    const endDate = new Date(startDate.getTime() + formData.duration * 60 * 1000);
-  
+    const endDate = new Date(
+      startDate.getTime() + formData.duration * 60 * 1000
+    );
+
     const startTime = startDate.toISOString().split("T")[1];
     const endTime = endDate.toISOString().split("T")[1];
-  
+
     axios
       .post("http://localhost:5000/teacher/fetch", {
         date: selectedDate,
@@ -109,7 +149,6 @@ const Schedule = () => {
         setTeachers([]);
       });
   }, [selectedDate, selectedTime, formData.duration]);
-  
 
   useEffect(() => {
     axios
@@ -139,6 +178,31 @@ const Schedule = () => {
   }, [phase]);
 
   useEffect(() => {
+    if (!formData.start_time || !formData.duration || !selectedDate)
+      return;
+
+    const startDate = new Date(`${selectedDate}T${formData.start_time}`);
+    const endDate = new Date(startDate.getTime() + formData.duration * 60000);
+
+    const isOverlapping = events.some((event) => {
+      if (event.id === selectedEvent?.id) return false;
+
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
+
+      return (
+        (startDate >= eventStart && startDate < eventEnd) ||
+        (endDate > eventStart && endDate <= eventEnd) ||
+        (startDate <= eventStart && endDate >= eventEnd)
+      );
+    });
+
+    if (isOverlapping) {
+      toast.error("⚠️ The selected duration overlaps with another event. Please adjust.");
+    }
+  }, [formData.duration, formData.start_time, selectedDate, events, selectedEvent]);
+
+  useEffect(() => {
     setFormData((prevData) => ({
       ...prevData,
       subject: phaseSubjects[phase][0][0], // First subject for the selected phase
@@ -146,27 +210,32 @@ const Schedule = () => {
     }));
   }, [phase, teachers]);
 
-  
   useEffect(() => {
     const fetchHolidays = async () => {
       const currentYear = new Date().getFullYear(); // Get the current year dynamically
-      const apiKey = "2uWe0PfqI0IUOhYJFmT0fJfLMxvcwRXa"; // Your API key
-      const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]; // Array of years to fetch holidays for
-  
+      const apiKey = "jJZJAAaUyk4RanIe0kgCq5LohOgdQ1s2 "; // Your API key
+      const years = [
+        currentYear - 2,
+        currentYear - 1,
+        currentYear,
+        currentYear + 1,
+        currentYear + 2,
+      ]; // Array of years to fetch holidays for
+
       try {
         const allHolidayEvents = [];
         const allDisabledDates = [];
-  
+
         for (const year of years) {
           const apiUrl = `https://calendarific.com/api/v2/holidays?&api_key=${apiKey}&country=IN&year=${year}`;
           const response = await axios.get(apiUrl);
           const holidays = response.data.response.holidays;
-  
+
           // Filter only national holidays
           const nationalHolidays = holidays.filter((holiday) =>
             holiday.type.includes("National holiday")
           );
-  
+
           // Map national holidays to FullCalendar event format (all-day events)
           const holidayEvents = nationalHolidays.map((holiday) => ({
             id: `holiday-${holiday.date.iso}`, // Unique ID for each holiday
@@ -177,34 +246,33 @@ const Schedule = () => {
             backgroundColor: "red", // Different color for national holidays
             borderColor: "red", // Consistent with background
           }));
-  
+
           // Collect events and disabled dates
           allHolidayEvents.push(...holidayEvents);
-          allDisabledDates.push(...nationalHolidays.map((holiday) => holiday.date.iso));
+          allDisabledDates.push(
+            ...nationalHolidays.map((holiday) => holiday.date.iso)
+          );
         }
-  
+
         // Merge holiday events with schedule events
         setEvents((prevEvents) => [...prevEvents, ...allHolidayEvents]);
-  
+
         // Prevent scheduling on holidays
         setDisabledDates(allDisabledDates);
-  
       } catch (error) {
         console.error("Error fetching national holidays:", error);
       }
     };
-  
+
     fetchHolidays();
   }, [phase]);
-  
-  
 
   const handleDateClick = (info) => {
     const isoDateString = info.dateStr;
     const date = new Date(isoDateString);
     const hours = date.getHours().toString().padStart(2, "0");
     const minutes = date.getMinutes().toString().padStart(2, "0");
-  
+
     setSelectedEvent(null); // Clear previous event selection
     setSelectedDate(isoDateString.split("T")[0]); // Extract date only
     setSelectedTime(`${hours}:${minutes}:00`); // Set time from the clicked slot
@@ -219,9 +287,12 @@ const Schedule = () => {
     setSelectedTab("update"); // Default to update tab
   };
 
-  
   const handleFormChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const updatedFormData = { ...formData, [name]: value };
+
+    // Update form state
+    setFormData(updatedFormData);
   };
 
   const handleUpdate = async () => {
@@ -248,7 +319,7 @@ const Schedule = () => {
       });
 
       if (isOverlapping) {
-        alert("The updated time slot overlaps with an existing event.");
+        toast.error("The updated time slot overlaps with an existing event.");
         return;
       }
 
@@ -261,7 +332,7 @@ const Schedule = () => {
         subject: formData.subject,
         teacher_name: formData.teacher_name,
       };
-      console.log(updatedEvent)
+      console.log(updatedEvent);
 
       await axios.put("http://localhost:5000/schedule/update", updatedEvent);
       alert("Event updated successfully!");
@@ -294,7 +365,7 @@ const Schedule = () => {
       alert("No event selected for deletion.");
       return;
     }
-  
+
     try {
       await axios.post("http://localhost:5000/schedule/delete", {
         id: selectedEvent.id,
@@ -309,13 +380,12 @@ const Schedule = () => {
       console.error("Error deleting event:", err);
     }
   };
-  
 
   const handleEventClick = (info) => {
     const clickedEventId = info.event.id; // Unique ID of the clicked event
     const clickedEventStart = info.event.start.toISOString(); // Start time of the clicked event
     const clickedEventEnd = info.event.end.toISOString(); // End time of the clicked event
-  
+
     // Find the exact event based on ID, start time, and end time
     const event = events.find(
       (evt) =>
@@ -323,13 +393,13 @@ const Schedule = () => {
         new Date(evt.start).toISOString() === clickedEventStart &&
         new Date(evt.end).toISOString() === clickedEventEnd
     );
-  
+
     if (event) {
       // Extract details from the matched event
       const [subject, teacher_name] = event.title.split(" (");
       setSelectedEvent(event);
-      console.log("Selected Event",event)
-  
+      console.log("Selected Event", event);
+
       setFormData({
         subject: subject.trim(),
         teacher_name: teacher_name.replace(")", "").trim(),
@@ -337,7 +407,7 @@ const Schedule = () => {
         end_time: event.end.split("T")[1], // Time part of the end time
         date: event.start.split("T")[0], // Date part of the start time
       });
-  
+
       setModalOpen(true);
       setSelectedTab("update");
     } else {
@@ -357,57 +427,72 @@ const Schedule = () => {
       alert("Please fill in all fields.");
       return;
     }
-  
+
     const startDate = new Date(`${selectedDate}T${selectedTime}`);
     if (isNaN(startDate.getTime())) {
       alert("Invalid date or time. Please check your inputs.");
       return;
     }
-  
+
     // Calculate the end time based on the duration
-    const endDate = new Date(startDate.getTime() + formData.duration * 60 * 1000);
+    const endDate = new Date(
+      startDate.getTime() + formData.duration * 60 * 1000
+    );
     const startTime = startDate.toISOString().split("T")[1]; // "HH:mm:ss.000Z"
     const endTime = endDate.toISOString().split("T")[1]; // "HH:mm:ss.000Z"
-  
+
     // Prevent scheduling on holidays
     if (disabledDates.includes(selectedDate)) {
       alert("Cannot schedule on a national holiday.");
       return;
     }
-  
+
     // Check for overlapping events
     const isOverlapping = events.some((event) => {
       const eventStartDate = new Date(event.start).toISOString().split("T")[0]; // Ensure event.start is converted to a string date
       if (eventStartDate !== selectedDate) return false; // Skip other dates
-  
+
       const eventStart = new Date(event.start); // Convert event.start to a Date object
       const eventEnd = new Date(event.end); // Convert event.end to a Date object
-  
+
       return (
         (startDate >= eventStart && startDate < eventEnd) ||
         (endDate > eventStart && endDate <= eventEnd) ||
         (startDate <= eventStart && endDate >= eventEnd)
       );
     });
-  
+
+    // const newEvent = {
+    //   date: formData.date,
+    //   start_time: formData.start_time,
+    //   duration: formData.duration,
+    // };
+
     if (isOverlapping) {
-      alert("Schedule overlaps with an existing event.");
+      toast.error(
+        "Schedule overlaps with another event! Adjust duration or start time."
+      );
       return;
     }
-  
+
+    // if (isOverlapping) {
+    //   alert("Schedule overlaps with an existing event.");
+    //   return;
+    // }
+
     // Generate recurring events, skipping holidays
     const eventsToAdd = [];
     for (let i = 0; i < formData.repeat_weeks; i++) {
       const eventDate = new Date(startDate);
       eventDate.setDate(startDate.getDate() + i * 7);
-  
+
       const formattedDate = eventDate.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
-  
+
       if (disabledDates.includes(formattedDate)) {
         console.log(`Skipping holiday on ${formattedDate}`);
         continue;
       }
-  
+
       eventsToAdd.push({
         phase,
         date: formattedDate,
@@ -418,14 +503,14 @@ const Schedule = () => {
         teacher_name: formData.teacher_name,
       });
     }
-  
+
     try {
       await axios.post("http://localhost:5000/schedule/add", {
         events: eventsToAdd,
       });
-  
+
       alert("Schedule added successfully!");
-  
+
       // Update the calendar with the new events
       setEvents((prevEvents) => [
         ...prevEvents,
@@ -436,16 +521,14 @@ const Schedule = () => {
           end: `${e.date}T${e.end_time}`,
         })),
       ]);
-  
+
       setModalOpen(false);
     } catch (err) {
       alert("Failed to add schedule.");
       console.error("Error adding schedule:", err);
     }
   };
-  
 
-  
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100">
       <h2 className="text-3xl font-bold mb-6 text-center text-gray-50">
@@ -458,15 +541,17 @@ const Schedule = () => {
           onChange={(e) => setPhase(e.target.value)}
           className="px-4 py-2 rounded-md border border-gray-700 focus:ring-2 focus:ring-blue-400 bg-gray-800 text-gray-300"
         >
-          <option value="phase1">Phase 1</option>
-          <option value="phase2">Phase 2</option>
+          <option value="phase1_batch1">Phase 1 Batch1</option>
+          <option value="phase1_batch2">Phase 1 Batch2</option>
+          <option value="phase1_batch3">Phase 1 Batch3</option>
+          <option value="phase2_batch1">Phase 2 Batch1</option>
+          <option value="phase2_batch2">Phase 2 Batch2</option>
+          <option value="phase2_batch3">Phase 2 Batch3</option>
           <option value="phase3_p1">Phase 3 Part 1</option>
           <option value="phase3_p2">Phase 3 Part 2</option>
         </select>
       </div>
 
-
-      
       <div className="bg-gray-800 shadow-lg rounded-lg p-6 text-sm">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -489,6 +574,7 @@ const Schedule = () => {
       {modalOpen && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-50">
           <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <Toaster position="top-right" />
             {/* If no event is selected, show the Add Schedule form */}
             {!selectedEvent ? (
               <>
@@ -504,10 +590,18 @@ const Schedule = () => {
                     <input
                       type="text"
                       value={
-                        phase === "phase1"
-                          ? "Phase 1"
-                          : phase === "phase2"
-                          ? "Phase 2"
+                        phase === "phase1_batch1"
+                          ? "Phase 1 batch 1"
+                          : phase === "phase1_batch2"
+                          ? "Phase 1 batch 2"
+                          : phase === "phase1_batch3"
+                          ? "phase 1 batch 3"
+                          : phase === "phase2_batch1"
+                          ? "Phase 2 batch 1"
+                          : phase === "phase2_batch2"
+                          ? "phase 2 batch 2"
+                          : phase === "phase2_batch3"
+                          ? "Phase 2 batch 3"
                           : phase === "phase3_p1"
                           ? "Phase 3 Part 1"
                           : phase === "phase3_p2"
@@ -534,8 +628,9 @@ const Schedule = () => {
 
                   {/* Start Time Field */}
                   <div>
-                    
-                    <label className="block mb-2 font-semibold text-gray-400">Start Time:</label>
+                    <label className="block mb-2 font-semibold text-gray-400">
+                      Start Time:
+                    </label>
                     <input
                       type="time" // Change input type to 'time' for better time selection
                       value={selectedTime}
@@ -602,7 +697,6 @@ const Schedule = () => {
                     </select>
                   </div>
 
-              
                   {/* Lecture Type */}
                   <div>
                     <label className="block mb-2 font-semibold text-gray-400">
@@ -696,7 +790,7 @@ const Schedule = () => {
                           value={
                             phase === "phase1"
                               ? "Phase 1"
-                              : phase === "phase2"
+                              : phase === "phase2_batch1"
                               ? "Phase 2"
                               : phase === "phase3_p1"
                               ? "Phase 3 Part 1"

@@ -49,7 +49,7 @@ const getSchedulesByPhase = async (req, res) => {
     const { phase } = req.params;
   
     try {
-      // Fetch schedules matching the phase
+      // Fetch schedules matching the phase and batch
       const schedules = await Schedule.find({ phase });
   
       if (schedules.length === 0) {
